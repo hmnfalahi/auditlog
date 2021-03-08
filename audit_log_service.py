@@ -11,7 +11,7 @@ class AuditLogService:
     def connect(self):
         if not self._conn or self._conn.is_closed:
             self._conn = pika.BlockingConnection(
-                parameters=pika.ConnectionParameters(host='localhost',)
+                parameters=pika.ConnectionParameters(host='localhost')
             )
             self._channel = self._conn.channel()
             self._channel.exchange_declare(
