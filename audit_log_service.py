@@ -7,7 +7,6 @@ class AuditLogService:
     def __init__(self):
         self._conn = None
         self._channel = None
-        self.c = True
 
     def connect(self):
         if not self._conn or self._conn.is_closed:
