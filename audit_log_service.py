@@ -23,7 +23,7 @@ class AuditLogService:
                 durable=True,
             )
             self._channel.queue_bind(
-                exchange='hmn_exchange',
+                exchange='sample_exchange',
                 queue='sample_q',
                 routing_key='sample_q',
             )
@@ -56,7 +56,7 @@ class AuditLogService:
     def _sender(self, message):
         print('{} || SENDING'.format(message))
         self._channel.basic_publish(
-            exchange='hmn_exchange',
+            exchange='sample_exchange',
             routing_key='sample_q',
             body=message,
             properties=pika.BasicProperties(delivery_mode=1),
