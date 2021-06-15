@@ -2,7 +2,7 @@ import time
 import pika
 
 
-class AuditLogService:
+class RMQService:
 
     def __init__(self):
         self._conn = None
@@ -15,29 +15,30 @@ class AuditLogService:
             )
             self._channel = self._conn.channel()
             self._channel.exchange_declare(
-                exchange='sample_exchange',
-                exchange_type='direct',
+                exchange='exchange',
+                exchange_type="x-delayed-message",
+                arguments={"x-delayed-type": "direct"}
             )
             self._channel.queue_declare(
-                queue='sample_q',
+                queue='queue',
                 durable=True,
             )
             self._channel.queue_bind(
-                exchange='sample_exchange',
-                queue='sample_q',
-                routing_key='sample_q',
+                exchange='exchange',
+                queue='queue',
+                routing_key='queue',
             )
 
     def callback(self, ch, method, proper, body):
         print(str(body), 'DOING')
-        time.sleep(1)
+        print(proper)
         self._channel.basic_ack(delivery_tag=method.delivery_tag)
         print(str(body), 'DONE')
 
     def _receiver(self):
         self._channel.basic_qos(prefetch_count=1)
         self._channel.basic_consume(
-            queue='sample_q',
+            queue='queue',
             on_message_callback=self.callback,
         )
         print(' [*] Waiting for messages. To exit press CTRL+C')
@@ -53,25 +54,25 @@ class AuditLogService:
             self.connect()
             self._receiver()
 
-    def _sender(self, message):
+    def _sender(self, message, delay=0):
         print('{} || SENDING'.format(message))
         self._channel.basic_publish(
-            exchange='sample_exchange',
-            routing_key='sample_q',
+            exchange='exchange',
+            routing_key='queue',
             body=message,
-            properties=pika.BasicProperties(delivery_mode=1),
+            properties=pika.BasicProperties(headers={"x-delay": delay}),
         )
         print("{} || SENT to RabbitMQ".format(message))
 
-    def sender(self, message):
+    def sender(self, message, delay=0):
         self.connect()
 
         try:
-            self._sender(message)
+            self._sender(message, delay)
         except Exception as e:
             print(e)
             self.connect()
-            self._sender(message)
+            self._sender(message, delay)
 
         self._conn.close()
 
